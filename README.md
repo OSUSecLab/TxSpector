@@ -14,21 +14,21 @@ To collect transaction trace, we revised the offcial [Go-Ethereum EVM](https://g
 *core/vm/instructions.go, every opcode related function is changed to return the results that we need for the furture anlysis, which are the arguments of the opcode. <br />
 *core/vm/tx_pool.go stores the left transaction traces into the "geth" mongodb dataset. <br />
 
-#2. Detector 
-##Analyze the transaction trace and detect attacks
-With the traces being collected, TxSpector can parse the trace into the EFG (execution flow graph). Then the trace opcode based EFG is converted into the IR based EFG and the logic relations are exported afterwards. Specifically, logic relations represent the data and control dependencies of the transactions. 
+# Detector 
+## Analyze the transaction trace and detect attacks
+With the traces being collected, TxSpector can parse the trace into the EFG (execution flow graph). Then the trace opcode based EFG is converted into the IR based EFG and the logic relations are exported afterwards. Specifically, logic relations represent the data and control dependencies of the transactions. <br />
 An example is that assume we have a transaction trace stored in the 0x37085f336b5d3e588e37674544678f8cb0fc092a6de5d83bd647e20e5232897b.txt, to generate facts/logic relations, the command should be as the following:
-./bin/analyze_geth.sh  trace_file  facts_dir
-./bin/analyze_geth1.sh 0x37085f336b5d3e588e37674544678f8cb0fc092a6de5d83bd647e20e5232897b.txt facts
+./bin/analyze_geth.sh  trace_file  facts_dir <br />
+./bin/analyze_geth1.sh 0x37085f336b5d3e588e37674544678f8cb0fc092a6de5d83bd647e20e5232897b.txt facts <br />
 
-After the facts are generated, users can customize their detection rules to detect related attacks. 
+After the facts are generated, users can customize their detection rules to detect related attacks. <br />
 An example is that with the generated facts, we can use the following command:
-souffle -F facts_dir detection_rule_file
-souffle -F facts ../datalog/1Reentrancy.dl (detect reentrancy attack)
+souffle -F facts_dir detection_rule_file <br />
+souffle -F facts ../datalog/1Reentrancy.dl (detect reentrancy attack) <br />
 
 Now we have the final results that have some metadata for forensic analysis. 
 
-Files:
+## Files
 * directory bin storess the files that are used to analyze
 * directory rules stores the rules to detect the attacks, including reentrancy attack, unchecked call attack,  failed send attack, timestamp dependence attack and other similar opcodes dependency attack, unsecured balance attack, misuse of origin attack, sucidal attack, and securify based reentrancy attack. 
 * directory src stores the code
