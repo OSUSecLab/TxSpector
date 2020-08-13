@@ -24,7 +24,7 @@ With the traces being collected, TxSpector can parse the trace into the EFG (exe
 ./detector/bin/analyze_geth.sh 0x37085f336b5d3e588e37674544678f8cb0fc092a6de5d83bd647e20e5232897b.txt facts
 ```
 
-Before detecting the attacks, we need to generate a facts "sc_addr.facts" by ourself, in which we only need to fill the receiver smart contract address. You can use the browser Etherscan [0x37085f336b5d3e588e37674544678f8cb0fc092a6de5d83bd647e20e5232897b](https://etherscan.io/tx/0x37085f336b5d3e588e37674544678f8cb0fc092a6de5d83bd647e20e5232897b) to search the info or use the go-ethereum to store related info. 
+Before detecting the attacks, we need to generate a facts "sc_addr.facts" by ourself, in which we only need to fill the receiver smart contract address. This facts file will be used to detect reentrancy attack. You can use the browser Etherscan [0x37085f336b5d3e588e37674544678f8cb0fc092a6de5d83bd647e20e5232897b](https://etherscan.io/tx/0x37085f336b5d3e588e37674544678f8cb0fc092a6de5d83bd647e20e5232897b) to search the info or use the go-ethereum to store related info. 
 
 
 
