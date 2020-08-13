@@ -21,7 +21,7 @@ With the traces being collected, TxSpector can parse the trace into the EFG (exe
 ./bin/analyze_geth.sh  trace_file  facts_dir
 ```
 ```
-../detector/bin/analyze_geth.sh 0x37085f336b5d3e588e37674544678f8cb0fc092a6de5d83bd647e20e5232897b.txt facts
+./detector/bin/analyze_geth.sh 0x37085f336b5d3e588e37674544678f8cb0fc092a6de5d83bd647e20e5232897b.txt facts
 ```
 
 After the facts are generated, users can customize their detection rules to detect related attacks. We define some rules in the directory rules. An example is that with the generated facts, we can use the following command: <br />
@@ -29,7 +29,7 @@ After the facts are generated, users can customize their detection rules to dete
 souffle -F facts_dir detection_rule_file
 ```
 ```
-souffle -F facts ../detector/rules/1Reentrancy.dl (detect reentrancy attack)
+souffle -F facts ./detector/rules/1Reentrancy.dl (detect reentrancy attack)
 ```
 
 Now we have the final results that have some metadata for forensic analysis. <br />
