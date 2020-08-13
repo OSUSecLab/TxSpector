@@ -28,8 +28,12 @@ An example is that assume we have a transaction trace stored in the 0x37085f336b
 
 After the facts are generated, users can customize their detection rules to detect related attacks. <br />
 An example is that with the generated facts, we can use the following command: <br />
+```
 souffle -F facts_dir detection_rule_file <br />
+```
+```
 souffle -F facts ../datalog/1Reentrancy.dl (detect reentrancy attack) <br />
+```
 
 Now we have the final results that have some metadata for forensic analysis. <br />
 
