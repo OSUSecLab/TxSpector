@@ -24,6 +24,12 @@ With the traces being collected, TxSpector can parse the trace into the EFG (exe
 ./detector/bin/analyze_geth.sh 0x37085f336b5d3e588e37674544678f8cb0fc092a6de5d83bd647e20e5232897b.txt facts
 ```
 
+Before detecting the attacks, we need to generate a facts "sc_addr.facts" by ourself or use script, in which we only need to fill the receiver smart contract address.
+You can use the browser Etherscan to search the info or use the go-ethereum to store related info. 
+```
+[0x37085f336b5d3e588e37674544678f8cb0fc092a6de5d83bd647e20e5232897b](https://etherscan.io/tx/0x37085f336b5d3e588e37674544678f8cb0fc092a6de5d83bd647e20e5232897b)
+```
+
 After the facts are generated, users can customize their detection rules to detect related attacks. We define some rules in the directory rules. An example is that with the generated facts, we can use the following command: <br />
 ```
 souffle -F facts_dir detection_rule_file
