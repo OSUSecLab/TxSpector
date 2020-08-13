@@ -1,0 +1,75 @@
+// BSD 3-Clause License
+//
+// Copyright (c) 2020, The Ohio State Univerisity. All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice, this
+//   list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from
+//   this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+// OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+// Note: Misuse of origin
+
+#include "types.dl"
+#include "opcode.dl"
+
+.decl depends(x:Variable, y:Variable)
+depends(x, x) :-
+  use(x, _, _, _, _, _).
+
+depends(x, x) :-
+  def(x, _, _, _, _).
+
+depends(x, y) :-
+  def(x, stmt, _, x_cd, x_cn),
+  use(y, stmt, _, _, x_cd, x_cn).
+
+depends(x, z) :-
+  depends(x, y),
+  depends(y, z).
+
+// Step 1: there is some origin opcode, which is correctly compared with the msg.sender. 
+.decl Step1(ori_loc:number, ori_val:Value, caller_loc:number, caller_val:Value, used_loc:number, used_op:Opcode)
+.output Step1
+Step1(ori_loc, ori_val, caller_loc, caller_val, used_loc, used_op) :- 
+  op_ORIGIN(_, ori_var, ori_loc, 1, _),
+  use(ori_var, _, _, used_loc, 1, _),
+  op_CALLER(_, caller_var, caller_loc, 1, _),
+  use(caller_var, _, _, used_loc, 1, _),
+  op(_, used_op, used_loc),
+  value(ori_var, ori_val),
+  value(caller_var, caller_val).
+
+// Step 2: remove the origins in the step 1
+// Step 3: for the left origins, they should be used by a jumpi or a sstore.
+.decl MisuseOriginResult(ori_loc:number, ori_val:Value, loc:number, opcode:Opcode)
+.output MisuseOriginResult
+MisuseOriginResult(ori_loc, ori_val, loc, opcode):-
+  op_ORIGIN(_, ori_var, ori_loc, 1, _),
+  !Step1(ori_loc, _ ,_ , _ ,_, _),
+  (op_JUMPI(_, _, var, loc, 1, _);
+   op_SSTORE(_, _, var, loc, 1, _)),
+  loc> ori_loc,
+  depends(var, ori_var),
+  value(ori_var, ori_val),
+  op(_, opcode, loc).
+

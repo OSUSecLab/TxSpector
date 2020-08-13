@@ -1,0 +1,72 @@
+// BSD 3-Clause License
+//
+// Copyright (c) 2020, The Ohio State Univerisity. All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice, this
+//   list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from
+//   this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+// OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+// Note: Failed send
+
+#include "types.dl"
+#include "opcode.dl"
+
+
+// Filter and obtain the pairs (x, y) with the dependency relationship 
+.decl depends(x:Variable, y:Variable)
+depends(x, x) :-
+  use(x, _, _, _, _, _).
+
+depends(x, x) :-
+  def(x, _, _, _, _).
+
+depends(x, y) :-
+  def(x, stmt, _, x_cd, x_cn),
+  use(y, stmt, _, _, x_cd, x_cn).
+
+depends(x, z) :-
+  depends(x, y),
+  depends(y, z).
+
+
+.decl FailedSendResult(revert_loc:number, call_loc:number, target_val:Value, value_val:Value)
+.output FailedSendResult
+FailedSendResult(revert_loc, call_loc, target_val, value_val):-
+
+  // Step 2: The result should be revert.
+  // Tip: Step 2 is moved to the front is to optimize the performance
+  op_REVERT(_, _, _, revert_loc, 1, _),
+
+  // Step 1: There should be a send, which includes a call opcode and value is not null. In addition, the call return value should be failure.
+  op_CALL(_, _, target_var, value_var, _, _, _, _, call_success, call_loc, 1, _),
+  !value(value_var, "0x0"),
+  value(call_success, "0x0"),
+
+  // Step 3: The call return value should be checked
+  op_JUMPI(_, _, jumpi_cond_var, jumpi_loc, 1, _),
+  jumpi_loc > call_loc,
+  revert_loc > jumpi_loc,
+  depends(jumpi_cond_var, call_success),
+  value(target_var, target_val),
+  value(value_var, value_val).

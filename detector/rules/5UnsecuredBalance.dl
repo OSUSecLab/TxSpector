@@ -1,0 +1,85 @@
+// BSD 3-Clause License
+//
+// Copyright (c) 2020, The Ohio State Univerisity. All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice, this
+//   list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from
+//   this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+// OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+// Note: Unsecured balance
+
+#include "types.dl"
+#include "opcode.dl"
+
+.decl depends(x:Variable, y:Variable)
+depends(x, x) :-
+  use(x, _, _, _, _, _).
+
+depends(x, x) :-
+  def(x, _, _, _, _).
+
+depends(x, y) :-
+  def(x, stmt, _, x_cd, x_cn),
+  use(y, stmt, _, _, x_cd, x_cn).
+
+depends(x, z) :-
+  depends(x, y),
+  depends(y, z).
+
+// no caller, just call
+.decl Situation1(c:number)
+.output Situation1
+Situation1(c) :-
+   c=count:{op_CALLER(_, _, _, 1, _)}.	
+
+
+// Step1: detect all the call satisifies the conditions where the target address is not CONST.
+.decl Step1( target_var:Variable, calldataload_var:Variable, value_var:Variable, call_success:Variable, call_loc:number, callvalue_opcode:Opcode)
+.output Step1
+Step1(target_var, calldataload_var, value_var, call_success, call_loc, callvalue_opcode) :-
+  op_CALL(_, _, target_var, value_var, _, _, _, _, call_success, call_loc, 1, _),
+  op_CALLDATALOAD(_, _, calldataload_var, calldataload_loc, 1, _),
+  depends(target_var, calldataload_var),
+  call_loc > calldataload_loc,
+  !value(value_var, "0x0"),
+  def(value_var, _, call_value_loc, _, _),
+  op(_, callvalue_opcode, call_value_loc),
+  callvalue_opcode != "CALLVALUE".
+
+// Step3: find all the calls removing all the calls in Step2
+.decl Step3(call_loc:number, calldataload_var:Variable, calvalue_opcode:Opcode, target_val:Value, value_val:Value, success_val:Value, count_caller:number)
+.output Step3
+Step3(call_loc, calldataload_var, callvalue_opcode, target_val, value_val, success_val, count_caller) :-
+  Step1(target_var, calldataload_var, value_var, call_success, call_loc, callvalue_opcode),
+  Situation1(count_caller),
+  (count_caller = 0;
+   count_caller = 1,
+   1 = count:{use(target_var, _, _, _, 1, _)},
+   op_CALLER(_, target_var, _, 1, _);
+   count_caller = 1,
+   0 = count:{use(target_var, _, _, _, 1, _)}),
+  value(target_var, target_val),
+  value(value_var, value_val),
+  value(call_success, success_val).
+

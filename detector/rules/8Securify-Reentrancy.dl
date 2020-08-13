@@ -1,0 +1,62 @@
+#include "types.dl"
+#include "opcode.dl"
+
+.decl depends(x:Variable, y:Variable)
+depends(x, x) :-
+  use(x, _, _, _, _, _).
+
+depends(x, x) :-
+  def(x, _, _, _, _).
+
+depends(x, y) :-
+  def(x, stmt, _, x_cd, x_cn),
+  use(y, stmt, _, _, x_cd, x_cn).
+
+depends(x, z) :-
+  depends(x, y),
+  depends(y, z).
+
+//Helper function: gas-dependent.
+//This line of code is considered gas dependent if it uses some variables that depend on the gas operation.
+.decl GasDep(gas_var:Variable, loc:number)
+GasDep(gas_var, loc) :-
+  use(var, _, _, loc, _, _),
+  depends(var, gas_var),
+  def(gas_var, _, gas_loc, _, _),
+  op(_, "GAS", gas_loc).
+
+//Requirement 1. There is an Ether transfer. In the transaction, there should be at least one CALL related opcode, whose Ether value is greater than zero and call return value is `success`.
+.decl CallOperator(gas_var:Variable, value_var:Variable, call_loc:number, call_cd:number, call_cn:number)
+CallOperator(gas_var, value_var, call_loc, call_cd, call_cn) :-
+  (op_CALL(_, gas_var, _, value_var, _, _, _, _, success_var, call_loc, call_cd, call_cn);
+   op_STATICCALL(_, gas_var, _, value_var, _, _, _, _, success_var, call_loc, call_cd, call_cn);
+   op_DELEGATE(_, gas_var, _, value_var, _, _, _, _, success_var, call_loc, call_cd, call_cn);
+   op_CALLCODE(_, gas_var, _, value_var, _, _, _, _, success_var, call_loc, call_cd, call_cn)),
+  value(success_var, "0x1"),
+  !value(value_var, "0x0").
+
+//Requirement 2: There is an SSTORE after the external call returns, i.e., there is a state change (i.e., updates of a storage variable) after the call. Besides, the value of ether transferred should depend on the storage variable.
+.decl NormalReen(gas_var:Variable, call_loc:number, sstore_loc:number, call_cd:number, call_cn:number)
+NormalReen(gas_var, call_loc, sstore_loc, call_cd, call_cn) :-
+  CallOperator(gas_var, value_var, call_loc, call_cd, call_cn),
+  op_SSTORE(_, sstore_addr_var, _, sstore_loc, sstore_depth, sstore_cn),
+  call_cd = sstore_depth,
+  call_cn = sstore_cn,
+  sstore_loc > call_loc,
+  depends(value_var, sstore_addr_var).
+
+//Gas-dependent Reentrancy
+//Requirement 3.1 : gas-dependent
+.decl GasDepReen(gas_var:Variable, call_loc:number, sstore_loc:number, call_cd:number, call_cn:number)
+.output GasDepReen
+GasDepReen(gas_var, call_loc, sstore_loc, call_cd, call_cn) :-
+  NormalReen(gas_var, call_loc, sstore_loc, call_cd, call_cn),
+  GasDep(gas_var, call_loc).
+
+//Reentrancy with Constant Gas
+//Requirement 3.2 : with constant gas
+.decl GasConstantReen(gas_var:Variable, call_loc:number, sstore_loc:number, call_cd:number, call_cn:number)
+.output GasConstantReen
+GasConstantReen(gas_var, call_loc, sstore_loc, call_cd, call_cn) :-
+  NormalReen(gas_var, call_loc, sstore_loc, call_cd, call_cn),
+  !GasDep(gas_var, call_loc).

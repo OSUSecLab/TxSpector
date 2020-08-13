@@ -1,0 +1,99 @@
+// BSD 3-Clause License
+//
+// Copyright (c) 2020, The Ohio State Univerisity. All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice, this
+//   list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from
+//   this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+// OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+// Note: Reentrancy
+
+#include "types.dl"
+#include "opcode.dl"
+
+
+// Filter and obtain the pairs (x, y) with the dependency relationship 
+.decl depends(x:Variable, y:Variable)
+depends(x, x) :-
+  use(x, _, _, _, _, _).
+
+depends(x, x) :-
+  def(x, _, _, _, _).
+
+depends(x, y) :-
+  def(x, stmt, _, x_cd, x_cn),
+  use(y, stmt, _, _, x_cd, x_cn).
+
+depends(x, z) :-
+  depends(x, y),
+  depends(y, z).
+
+
+// Collect all the call related opcodes info
+.decl CallOperator(target_val:Value, call_loc:number, call_cd:number, call_cn:number)
+CallOperator(target_val, call_loc, call_cd, call_cn) :-
+  (op_CALL(_, _, target_var, _, _, _, _, _, _, call_loc, call_cd, call_cn);
+   op_STATICCALL(_, _, target_var, _, _, _, _, _, _, call_loc, call_cd, call_cn);
+   op_DELEGATE(_, _, target_var, _, _, _, _, _, _, call_loc, call_cd, call_cn);
+   op_CALLCODE(_, _, target_var, _, _, _, _, _, _, call_loc, call_cd, call_cn)),
+  value(target_var, target_val).
+
+
+// Check the second condition. A opcode sstore needs to in the returned call of the call where the sstore appears. 
+.decl ReenResult(sload_loc: number, jumpi_loc:number, sload_depth:number, sload_call_number:number,	
+	sstore_loc:number, sstore_depth:number, sstore_cn:number, sstore_sc_addr:Value, sload_sc_addr:Value)
+.output ReenResult
+ReenResult(sload_loc, jumpi_loc, sload_depth, sload_call_number, sstore_loc, sstore_depth, sstore_cn, sstore_sc_addr, sload_sc_addr):-
+  // Step1: Get sload
+  //    a) its call depth must be greater than 2
+  //	  b) it must have the same call depth and call number with jumpi, which depends on sload
+  op_SLOAD(_, sload_addr_var, sload_val_var, sload_loc, sload_depth, sload_call_number),
+  sload_depth > 2,
+  op_JUMPI(_, _, jumpi_cond_var, jumpi_loc, sload_depth, sload_call_number),
+  depends(jumpi_cond_var, sload_val_var),
+
+  // Step2: Get sstore
+  //    a) sstore call depth must be less than sload call depth
+  op_SSTORE(_, sstore_addr_var, _, sstore_loc, sstore_depth, sstore_cn),
+  sload_depth >= sstore_depth + 2,
+  sstore_loc > sload_loc,
+  value(sstore_addr_var, sstore_addr_var_val),
+  value(sload_addr_var, sload_addr_var_val),
+  sstore_addr_var_val = sload_addr_var_val,
+
+  // Step3: Make sure sload and sstore are from the same contract
+  ((sstore_depth = 1,
+   sc_addr(sstore_sc_addr));
+   (sstore_depth != 1,
+    CallOperator(sstore_sc_addr, _, sstore_depth-1 , call_cn),
+    call_cn >= sstore_cn)
+   ),
+
+   CallOperator(sload_sc_addr, _, sload_depth-1 , call_cn),
+   call_cn >= sload_call_number,
+
+   sstore_sc_addr = sload_sc_addr.
+
+
+
