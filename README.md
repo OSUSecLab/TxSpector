@@ -1,5 +1,5 @@
-#1. Revised Go-Ethereum
-##Generate transaction trace by replaying transactions in the Ethereum Blockchain
+# 1. Revised Go-Ethereum
+## Generate transaction trace by replaying transactions in the Ethereum Blockchain
 To collect transaction trace, we revise the Go-Ethereum EVM to record some info. For all the transaction in the Blockchain, you can just replay all the transactions by syncing. For only one transaction, you can simulate the interaction with the geth client. The traces will be recorded in the MongoDB dataset named "geth" automatically. 
 
 Revised files:
