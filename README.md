@@ -3,10 +3,10 @@ TxSpector is the first generic logic-driven framework for uncovering attacks on 
 
 ## Revised Go-Ethereum 
 ### Generate transaction trace by replaying transactions in the Ethereum Blockchain
-To collect transaction trace, we revise the Go-Ethereum EVM to record some info. For all the transaction in the Blockchain, you can just replay all the transactions by syncing. For only one transaction, you can simulate the interaction with the geth client. The traces will be recorded in the MongoDB dataset named "geth" automatically. 
+To collect transaction trace, we revised the offcial [Go-Ethereum EVM](https://github.com/ethereum/go-ethereum) to record transaction info, such as its date, sender, reciver, and so on. To obtain all the transaction traces in Ethereum Blockchain, you can just replay all the transactions by syncing. For only one transaction, you can simulate the interaction with the geth client. The traces will be recorded in the MongoDB dataset named "geth" automatically. 
 
-Revised files:
-*mongo/mongodb.go initializes the mongodb and creates some global data, such as transaction related metadata.
+## Revised files
+*mongo/mongodb.go initializes the mongodb and creates some global data, such as transaction related metadata. <br />
 *mongo/bashdb.go creates the struct Transac that is used to store the transaction related info, including the transaction trace.
 *core/state_processor.go and core/state_transition.go deal with the logic that execute transactions.
 *core/state_prefetcher.go and core/vm/evm.go are changed to remove the redundency casued by prefetching.
