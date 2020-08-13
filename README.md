@@ -17,23 +17,23 @@ To collect transaction trace, we revised the offcial [Go-Ethereum EVM](https://g
 # Detector 
 ## Analyze the transaction trace and detect attacks
 With the traces being collected, TxSpector can parse the trace into the EFG (execution flow graph). Then the trace opcode based EFG is converted into the IR based EFG and the logic relations are exported afterwards. Specifically, logic relations represent the data and control dependencies of the transactions. <br />
-An example is that assume we have a transaction trace stored in the 0x37085f336b5d3e588e37674544678f8cb0fc092a6de5d83bd647e20e5232897b.txt, to generate facts/logic relations, the command should be as the following:
+An example is that assume we have a transaction trace stored in the 0x37085f336b5d3e588e37674544678f8cb0fc092a6de5d83bd647e20e5232897b.txt, to generate facts/logic relations, the command should be as the following: <br />
 ./bin/analyze_geth.sh  trace_file  facts_dir <br />
 ./bin/analyze_geth1.sh 0x37085f336b5d3e588e37674544678f8cb0fc092a6de5d83bd647e20e5232897b.txt facts <br />
 
 After the facts are generated, users can customize their detection rules to detect related attacks. <br />
-An example is that with the generated facts, we can use the following command:
+An example is that with the generated facts, we can use the following command: <br />
 souffle -F facts_dir detection_rule_file <br />
 souffle -F facts ../datalog/1Reentrancy.dl (detect reentrancy attack) <br />
 
-Now we have the final results that have some metadata for forensic analysis. 
+Now we have the final results that have some metadata for forensic analysis. <br />
 
 ## Files
-* directory bin storess the files that are used to analyze
-* directory rules stores the rules to detect the attacks, including reentrancy attack, unchecked call attack,  failed send attack, timestamp dependence attack and other similar opcodes dependency attack, unsecured balance attack, misuse of origin attack, sucidal attack, and securify based reentrancy attack. 
-* directory src stores the code
-   src/opcode.py stores the opcodes of EVM
-   src/evm_efg.py parses the transaction trace and builds a trace-based EFG (Execution Flow Graph)
-   src/tac_efg.py generates a IR (Intermediate Representation) based EFG
-   src/exporter.py exports the needed facts
-   other files are helpers to analyze
+* directory bin storess the files that are used to analyze. <br />
+* directory rules stores the rules to detect the attacks, including reentrancy attack, unchecked call attack,  failed send attack, timestamp dependence attack and other similar opcodes dependency attack, unsecured balance attack, misuse of origin attack, sucidal attack, and securify based reentrancy attack. <br />
+* directory src stores the code <br />
+   src/opcode.py stores the opcodes of EVM <br />
+   src/evm_efg.py parses the transaction trace and builds a trace-based EFG (Execution Flow Graph) <br />
+   src/tac_efg.py generates a IR (Intermediate Representation) based EFG <br />
+   src/exporter.py exports the needed facts <br />
+   other files are helpers to analyze <br />
