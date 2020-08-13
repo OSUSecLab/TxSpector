@@ -7,12 +7,12 @@ To collect transaction trace, we revised the offcial [Go-Ethereum EVM](https://g
 
 ## Revised files
 *mongo/mongodb.go initializes the mongodb and creates some global data, such as transaction related metadata. <br />
-*mongo/bashdb.go creates the struct Transac that is used to store the transaction related info, including the transaction trace.
-*core/state_processor.go and core/state_transition.go deal with the logic that execute transactions.
-*core/state_prefetcher.go and core/vm/evm.go are changed to remove the redundency casued by prefetching.
-*core/vm/interpreter.go, in Run function, every opcode is executed and its related trace is recored into the dataset.
-*core/vm/instructions.go, every opcode related function is changed to return the results that we need for the furture anlysis, which are the arguments of the opcode.
-*core/vm/tx_pool.go stores the left transaction traces into the "geth" mongodb dataset.
+*mongo/bashdb.go creates the struct Transac that is used to store the transaction related info, including the transaction trace. <br />
+*core/state_processor.go and core/state_transition.go deal with the logic that execute transactions. <br />
+*core/state_prefetcher.go and core/vm/evm.go are changed to remove the redundency casued by prefetching. <br />
+*core/vm/interpreter.go, in Run function, every opcode is executed and its related trace is recored into the dataset. <br />
+*core/vm/instructions.go, every opcode related function is changed to return the results that we need for the furture anlysis, which are the arguments of the opcode. <br />
+*core/vm/tx_pool.go stores the left transaction traces into the "geth" mongodb dataset. <br />
 
 #2. Detector 
 ##Analyze the transaction trace and detect attacks
