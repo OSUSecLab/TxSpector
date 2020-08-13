@@ -16,22 +16,20 @@ To collect transaction trace, we revised the offcial [Go-Ethereum EVM](https://g
 
 # Detector 
 ## Analyze the transaction trace and detect attacks
-With the traces being collected, TxSpector can parse the trace into the EFG (execution flow graph). Then the trace opcode based EFG is converted into the IR based EFG and the logic relations are exported afterwards. Specifically, logic relations represent the data and control dependencies of the transactions. <br />
-An example is that assume we have a transaction trace stored in the 0x37085f336b5d3e588e37674544678f8cb0fc092a6de5d83bd647e20e5232897b.txt, to generate facts/logic relations, the command should be as the following: <br />
+With the traces being collected, TxSpector can parse the trace into the EFG (execution flow graph). Then the trace opcode based EFG is converted into the IR based EFG and the logic relations are exported afterwards. Specifically, logic relations represent the data and control dependencies of the transactions. An example is a transaction trace example stored in the directory example 0x37085f336b5d3e588e37674544678f8cb0fc092a6de5d83bd647e20e5232897b.txt, to generate facts/logic relations, the command should be as the following: <br />
 ```
 ./bin/analyze_geth.sh  trace_file  facts_dir
 ```
 ```
-./bin/analyze_geth1.sh 0x37085f336b5d3e588e37674544678f8cb0fc092a6de5d83bd647e20e5232897b.txt facts 
+../detector/bin/analyze_geth.sh 0x37085f336b5d3e588e37674544678f8cb0fc092a6de5d83bd647e20e5232897b.txt facts
 ```
 
-After the facts are generated, users can customize their detection rules to detect related attacks. <br />
-An example is that with the generated facts, we can use the following command: <br />
+After the facts are generated, users can customize their detection rules to detect related attacks. We define some rules in the directory rules. An example is that with the generated facts, we can use the following command: <br />
 ```
-souffle -F facts_dir detection_rule_file <br />
+souffle -F facts_dir detection_rule_file
 ```
 ```
-souffle -F facts ../datalog/1Reentrancy.dl (detect reentrancy attack) <br />
+souffle -F facts ../detector/rules/1Reentrancy.dl (detect reentrancy attack)
 ```
 
 Now we have the final results that have some metadata for forensic analysis. <br />
