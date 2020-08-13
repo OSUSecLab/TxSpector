@@ -6,13 +6,13 @@ TxSpector is the first generic logic-driven framework for uncovering attacks on 
 To collect transaction trace, we revised the offcial [Go-Ethereum EVM](https://github.com/ethereum/go-ethereum) to record transaction info, such as its date, sender, reciver, and so on. To obtain all the transaction traces in Ethereum Blockchain, you can just replay all the transactions by syncing. For only one transaction, you can simulate the interaction with the geth client. The traces will be recorded in the MongoDB dataset named "geth" automatically. 
 
 ## Revised files
-*mongo/mongodb.go initializes the mongodb and creates some global data, such as transaction related metadata. <br />
-*mongo/bashdb.go creates the struct Transac that is used to store the transaction related info, including the transaction trace. <br />
-*core/state_processor.go and core/state_transition.go deal with the logic that execute transactions. <br />
-*core/state_prefetcher.go and core/vm/evm.go are changed to remove the redundency casued by prefetching. <br />
-*core/vm/interpreter.go, in Run function, every opcode is executed and its related trace is recored into the dataset. <br />
-*core/vm/instructions.go, every opcode related function is changed to return the results that we need for the furture anlysis, which are the arguments of the opcode. <br />
-*core/vm/tx_pool.go stores the left transaction traces into the "geth" mongodb dataset. <br />
+*go-ethereum/mongo/mongodb.go initializes the mongodb and creates some global data, such as transaction related metadata. <br />
+*go-ethereum/mongo/bashdb.go creates the struct Transac that is used to store the transaction related info, including the transaction trace. <br />
+*go-ethereum/core/state_processor.go and core/state_transition.go deal with the logic that execute transactions. <br />
+*go-ethereum/core/state_prefetcher.go and core/vm/evm.go are changed to remove the redundency casued by prefetching. <br />
+*go-ethereum/core/vm/interpreter.go, in Run function, every opcode is executed and its related trace is recored into the dataset. <br />
+*go-ethereum/core/vm/instructions.go, every opcode related function is changed to return the results that we need for the furture anlysis, which are the arguments of the opcode. <br />
+*go-ethereum/core/vm/tx_pool.go stores the left transaction traces into the "geth" mongodb dataset. <br />
 
 # Detector 
 ## Analyze the transaction trace and detect attacks
