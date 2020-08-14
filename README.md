@@ -43,7 +43,7 @@ souffle -F facts_dir detection_rule_file
 souffle -F facts ./detector/rules/1Reentrancy.dl (detect reentrancy attack)
 ```
 
-Now we have the final results that have some metadata for forensic analysis. <br />
+Now we have the final results in file ReenResult.csv that have some metadata for forensic analysis. <br />
 
 ## Files
 * directory bin storess the files that are used to analyze. <br />
