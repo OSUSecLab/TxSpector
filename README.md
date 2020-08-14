@@ -15,6 +15,13 @@ To collect transaction trace, we revised the offcial [Go-Ethereum EVM](https://g
 *go-ethereum/core/vm/tx_pool.go stores the left transaction traces into the "geth" mongodb dataset. <br />
 
 # Detector 
+
+## Requirements
+Modules needed from python are put in the detector/requirements.txt. In addition, we need souffle. Other versions may also work.
+```
+souffle==1.5.1
+```
+
 ## Analyze the transaction trace and detect attacks
 With the traces being collected, TxSpector can parse the trace into the EFG (execution flow graph). Then the trace opcode based EFG is converted into the IR based EFG and the logic relations are exported afterwards. Specifically, logic relations represent the data and control dependencies of the transactions. An example is a transaction trace example stored in the directory example 0x37085f336b5d3e588e37674544678f8cb0fc092a6de5d83bd647e20e5232897b.txt, to generate facts/logic relations, the command should be as the following: <br />
 ```
